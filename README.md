@@ -1,0 +1,1 @@
+a locally ran ai that can act like whatever character you want.
