@@ -12,11 +12,11 @@ struct CharacterFile {
 #[derive(Deserialize, Clone)]
 struct Character {
     id: String,
-    name: String,
     system_prompt: String,
     backstory: String,
     greeting: String,
     relationships: Vec<String>,
+    signature_lines: Vec<String>,
 }
 
 #[derive(Clone, Serialize)]
@@ -50,10 +50,11 @@ fn load_characters() -> CharacterFile {
 
 fn build_system_prompt(c: &Character) -> String {
     format!(
-        "{}\n\nBackstory:\n{}\n\nRelationships:\n{}",
+        "{}\n\nBackstory:\n{}\n\nRelationships:\n{}\n\nSignature lines (use only in emotional moments):\n- {}",
         c.system_prompt,
         c.backstory,
-        c.relationships.join(", ")
+        c.relationships.join(", "),
+        c.signature_lines.join("\n- ")
     )
 }
 
@@ -61,9 +62,23 @@ fn get_character(file: &CharacterFile, id: &str) -> Option<Character> {
     file.characters.iter().find(|c| c.id == id).cloned()
 }
 
+fn init_messages(character: &Character) -> Vec<Message> {
+    vec![
+        Message {
+            role: "system".to_string(),
+            content: format!(
+                "{}\n\nBackstory:\n{}\n\nRelationships:\n{}\n\nSignature lines:\n- {}",
+                character.system_prompt,
+                character.backstory,
+                character.relationships.join(", "),
+                character.signature_lines.join("\n- ")
+            ),
+        }
+    ]
+}
+
 fn main() {
     let client = Client::new();
-
     let file = load_characters();
 
     println!("Available characters:");
@@ -78,19 +93,12 @@ fn main() {
     io::stdin().read_line(&mut input).unwrap();
     let input = input.trim();
 
-    let character = get_character(&file, input)
+    let mut character = get_character(&file, input)
         .expect("Character not found");
 
     println!("\nAI: {}\n", character.greeting);
 
-    let system_prompt = build_system_prompt(&character);
-
-    let mut messages: Vec<Message> = vec![
-        Message {
-            role: "system".to_string(),
-            content: system_prompt,
-        }
-    ];
+    let mut messages = init_messages(&character);
 
     loop {
         print!("You: ");
@@ -98,10 +106,61 @@ fn main() {
 
         let mut user_input = String::new();
         io::stdin().read_line(&mut user_input).unwrap();
+
         let user_input = user_input.trim().to_string();
 
-        if user_input == "exit" {
-            break;
+        let parts: Vec<&str> = user_input.split_whitespace().collect();
+
+        if parts.is_empty() {
+            continue;
+        }
+
+        let command = parts[0];
+
+        match command {
+            "/list" => {
+                println!("Available characters:");
+                for c in &file.characters {
+                    println!("- {}", c.id);
+                }
+                continue;
+            }
+
+            "/exit" => break,
+
+            "/help" => {
+                println!("/list - show characters");
+                println!("/exit - quit");
+                continue;
+            }
+
+            "/char" => {
+                if parts.len() < 2 {
+                    println!("Usage: /char <id>");
+                    continue;
+                }
+
+                let new_id = parts[1];
+
+                let new_char = match get_character(&file, new_id) {
+                    Some(c) => c,
+                    None => {
+                        println!("Character not found.");
+                        continue;
+                    }
+                };
+
+                character = new_char;
+
+                println!("\nSwitched to: {}\n", character.id);
+                println!("AI: {}\n", character.greeting);
+
+                messages = init_messages(&character);
+
+                continue;
+            }
+
+            _ => {}
         }
 
         messages.push(Message {
