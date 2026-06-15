@@ -210,6 +210,35 @@ fn main() {
                 continue;
             }
 
+            "/chats" => {
+                for (i, chat) in sessions.chats.iter().enumerate() {
+                    if i == current_chat {
+                        println!("* {} ({})", i + 1, chat.name);
+                    } else {
+                        println!("  {} ({})", i + 1, chat.name);
+                    }
+                }
+
+                continue;
+            }
+
+            "/switch" => {
+                if parts.len() < 2 {
+                    println!("usage: /switch <index>");
+                    continue;
+                }
+
+                match parts[1].parse::<usize>() {
+                    Ok(idx) if idx < sessions.chats.len() => {
+                        let idx = parts[1].parse::<usize>().unwrap() - 1;
+                        println!("switched to {}", sessions.chats[idx].name);
+                    }
+                    _ => println!("invalid chat index"),
+                }
+
+                continue;
+            }
+
             _ => {}
         }
 
