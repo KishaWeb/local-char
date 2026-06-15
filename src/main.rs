@@ -17,7 +17,6 @@ struct Character {
     backstory: String,
     greeting: String,
     relationships: Vec<String>,
-    signature_lines: Vec<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -83,15 +82,8 @@ fn load_sessions() -> SessionFile {
 }
 
 fn save_sessions(sessions: &SessionFile) {
-    println!("DEBUG: save_sessions called");
-
     let data = serde_json::to_string_pretty(sessions).unwrap();
-
-    println!("DEBUG JSON:\n{}", data);
-
     fs::write("history.json", data).unwrap();
-
-    println!("DEBUG: file written");
 }
 
 fn load_characters() -> CharacterFile {
@@ -118,14 +110,13 @@ fn main() {
     let client = Client::new();
     let file = load_characters();
     let mut sessions = load_sessions();
-    let mut current_chat = 0;
-
-    if sessions.chats.is_empty() {
-        sessions.chats.push(ChatSession {
-            name: "Chat 1".to_string(),
-            messages: vec![],
-        });
-    }
+    let new_chat_number = sessions.chats.len() + 1;
+    sessions.chats.push(ChatSession {
+        name: format!("Chat {}", new_chat_number),
+        messages: vec![],
+    });
+    let mut current_chat = sessions.chats.len() - 1;
+    save_sessions(&sessions);
 
     let mut character: Option<Character> = None;
 
@@ -202,6 +193,23 @@ fn main() {
                 continue;
             }
 
+            "/newchat" => {
+                let new_name = format!("Chat {}", sessions.chats.len() + 1);
+
+                sessions.chats.push(ChatSession {
+                    name: new_name.clone(),
+                    messages: vec![],
+                });
+
+                current_chat = sessions.chats.len() - 1;
+
+                save_sessions(&sessions);
+
+                println!("created and switched to {}", new_name);
+
+                continue;
+            }
+
             _ => {}
         }
 
@@ -259,7 +267,5 @@ fn main() {
         save_sessions(&sessions);
     }
 
-    println!("DEBUG: before save");
     save_sessions(&sessions);
-    println!("DEBUG: after save");
 }
