@@ -122,6 +122,56 @@
           "timestamp": 1781529146,
           "role": "assistant",
           "content": "Hi."
+        },
+        {
+          "timestamp": 1781790575,
+          "role": "user",
+          "content": "what was my first messge in this chat"
+        },
+        {
+          "timestamp": 1781790595,
+          "role": "assistant",
+          "content": "Your first message was \"hi\"."
+        },
+        {
+          "timestamp": 1781790633,
+          "role": "user",
+          "content": "be more specfic youre 50 percant right"
+        },
+        {
+          "timestamp": 1781790636,
+          "role": "assistant",
+          "content": "I responded with \"Hi.\" That was your first message."
+        },
+        {
+          "timestamp": 1781790653,
+          "role": "user",
+          "content": "no what was MY messge not you"
+        },
+        {
+          "timestamp": 1781790656,
+          "role": "assistant",
+          "content": "Your first message was \"hi\"."
+        },
+        {
+          "timestamp": 1781790667,
+          "role": "user",
+          "content": "it was hello"
+        },
+        {
+          "timestamp": 1781790669,
+          "role": "assistant",
+          "content": "Your first message was \"hello\"."
+        },
+        {
+          "timestamp": 1781790683,
+          "role": "user",
+          "content": "u good bro?"
+        },
+        {
+          "timestamp": 1781790686,
+          "role": "assistant",
+          "content": "I'm well. How are you?"
         }
       ]
     },
@@ -180,6 +230,34 @@
     },
     {
       "name": "Chat 7",
+      "messages": []
+    },
+    {
+      "name": "Chat 8",
+      "messages": []
+    },
+    {
+      "name": "Chat 9",
+      "messages": []
+    },
+    {
+      "name": "Chat 10",
+      "messages": []
+    },
+    {
+      "name": "Chat 11",
+      "messages": []
+    },
+    {
+      "name": "Chat 12",
+      "messages": []
+    },
+    {
+      "name": "Chat 13",
+      "messages": []
+    },
+    {
+      "name": "Chat 14",
       "messages": []
     }
   ]

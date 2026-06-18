@@ -4,6 +4,21 @@ use serde_json::json;
 use std::fs;
 use std::io::{self, Write};
 use std::time::{SystemTime, UNIX_EPOCH};
+use crossterm::{
+    event::{self, Event, KeyCode},
+    execute,
+    terminal::{
+        disable_raw_mode,
+        enable_raw_mode,
+        EnterAlternateScreen,
+        LeaveAlternateScreen,
+    },
+};
+use ratatui::{
+    backend::CrosstermBackend,
+    widgets::{Block, Borders, List, ListItem, ListState},
+    Terminal,
+};
 
 #[derive(Deserialize, Clone)]
 struct CharacterFile {
@@ -50,6 +65,83 @@ struct Choice {
 #[derive(Deserialize)]
 struct RespMessage {
     content: String,
+}
+
+fn pick_chat(chats: &[String]) -> io::Result<usize> {
+    enable_raw_mode()?;
+
+    let mut stdout = io::stdout();
+
+    execute!(stdout, EnterAlternateScreen)?;
+
+    let backend = CrosstermBackend::new(stdout);
+
+    let mut terminal = Terminal::new(backend)?;
+
+    let mut selected = 0;
+
+    loop {
+        terminal.draw(|f| {
+            let area = f.area();
+
+            let items: Vec<ListItem> = chats
+                .iter()
+                .map(|c| ListItem::new(c.clone()))
+                .collect();
+
+            let list = List::new(items)
+                .block(
+                    Block::default()
+                        .title("Chats")
+                        .borders(Borders::ALL),
+                )
+                .highlight_symbol("> ");
+
+            let mut state = ListState::default();
+
+            state.select(Some(selected));
+
+            f.render_stateful_widget(list, area, &mut state);
+        })?;
+
+        if let Event::Key(key) = event::read()? {
+            match key.code {
+                KeyCode::Up | KeyCode::Char('k') => {
+                    selected = selected.saturating_sub(1);
+                }
+
+                KeyCode::Down | KeyCode::Char('j') => {
+                    if selected + 1 < chats.len() {
+                        selected += 1;
+                    }
+                }
+
+                KeyCode::Enter => {
+                    disable_raw_mode()?;
+
+                    execute!(
+                        terminal.backend_mut(),
+                        LeaveAlternateScreen
+                    )?;
+
+                    return Ok(selected);
+                }
+
+                KeyCode::Esc => {
+                    disable_raw_mode()?;
+
+                    execute!(
+                        terminal.backend_mut(),
+                        LeaveAlternateScreen
+                    )?;
+
+                    return Ok(0);
+                }
+
+                _ => {}
+            }
+        }
+    }
 }
 
 fn now() -> u64 {
@@ -223,17 +315,34 @@ fn main() {
             }
 
             "/switch" => {
-                if parts.len() < 2 {
-                    println!("usage: /switch <index>");
-                    continue;
-                }
+                let mut names: Vec<String> = vec!["[New Chat]".to_string()];
 
-                match parts[1].parse::<usize>() {
-                    Ok(idx) if idx < sessions.chats.len() => {
-                        let idx = parts[1].parse::<usize>().unwrap() - 1;
-                        println!("switched to {}", sessions.chats[idx].name);
-                    }
-                    _ => println!("invalid chat index"),
+                names.extend(
+                    sessions.chats.iter().map(|c| c.name.clone())
+                );
+
+                let selected = pick_chat(&names).unwrap();
+
+                if selected == 0 {
+                    let new_name = format!("Chat {}", sessions.chats.len() + 1);
+
+                    sessions.chats.push(ChatSession {
+                        name: new_name.clone(),
+                        messages: vec![],
+                    });
+
+                    current_chat = sessions.chats.len() - 1;
+
+                    save_sessions(&sessions);
+
+                    println!("created and switched to {}", new_name);
+                } else {
+                    current_chat = selected - 1;
+
+                    println!(
+                        "switched to {}",
+                        sessions.chats[current_chat].name
+                    );
                 }
 
                 continue;
