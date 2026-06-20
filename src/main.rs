@@ -202,33 +202,46 @@ fn main() {
     let client = Client::new();
     let file = load_characters();
     let mut sessions = load_sessions();
-    let new_chat_number = sessions.chats.len() + 1;
-    sessions.chats.push(ChatSession {
-        name: format!("Chat {}", new_chat_number),
-        messages: vec![],
-    });
-    let mut current_chat = sessions.chats.len() - 1;
-    save_sessions(&sessions);
+    let mut names: Vec<String> = vec!["[New Chat]".to_string()];
+
+    names.extend(
+        sessions.chats.iter().map(|c| c.name.clone())
+    );
+
+    let selected = pick_chat(&names).unwrap();
+
+    let mut current_chat;
+
+    if selected == 0 {
+        let new_name = format!("Chat {}", sessions.chats.len() + 1);
+
+        sessions.chats.push(ChatSession {
+            name: new_name,
+            messages: vec![],
+        });
+
+        current_chat = sessions.chats.len() - 1;
+
+        save_sessions(&sessions);
+    } else {
+        current_chat = selected - 1;
+    }
 
     let mut character: Option<Character> = None;
 
-    println!("Available characters:");
-    for c in &file.characters {
-        println!("- {}", c.id);
-    }
+    let mut chars = vec!["[None]".to_string()];
 
-    print!("Choose character id (or 'none'): ");
-    io::stdout().flush().unwrap();
+    chars.extend(
+        file.characters.iter().map(|c| c.id.clone())
+    );
 
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
-    let input = input.trim();
+    let selected = pick_chat(&chars).unwrap();
 
-    if input != "none" {
-        character = get_character(&file, input);
-        if let Some(c) = &character {
-            println!("\nAI: {}\n", c.greeting);
-        }
+    if selected == 0 {
+        character = None;
+    } else if let Some(c) = get_character(&file, &chars[selected]) {
+        println!("AI: {}\n", c.greeting);
+        character = Some(c);
     }
 
     loop {
@@ -250,9 +263,11 @@ fn main() {
 
             "/help" => {
                 println!("/list");
-                println!("/char <id>");
+                println!("/char <id> (or no id to go to the tui)");
                 println!("/exit");
                 println!("/chats (placeholder)");
+                println!("/newchat");
+                println!("/switch <chat id> (or no chat id to go to the tui");
                 continue;
             }
 
@@ -265,7 +280,19 @@ fn main() {
 
             "/char" => {
                 if parts.len() < 2 {
-                    println!("usage: /char <id>");
+                    let names: Vec<String> = file
+                        .characters
+                        .iter()
+                        .map(|c| c.id.clone())
+                        .collect();
+
+                    let selected = pick_chat(&names).unwrap();
+
+                    if let Some(c) = get_character(&file, &names[selected]) {
+                        character = Some(c);
+                        println!("switched character");
+                    }
+
                     continue;
                 }
 
