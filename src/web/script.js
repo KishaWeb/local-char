@@ -1,30 +1,38 @@
-console.log("script loaded");
+let currentChat = "chat_1";
 
-window.sendMessage = async function () {
-    const message =
-        document.getElementById("message").value;
+async function sendMessage() {
+    const input = document.getElementById("message");
+    const msg = input.value;
+    input.value = "";
 
-    const response = await fetch(
-        "http://127.0.0.1:8080/v1/chat/completions",
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: "local-model",
-                messages: [
-                    {
-                        role: "user",
-                        content: message
-                    }
-                ]
-            })
-        }
-    );
+    if (!msg) return;
 
-    const data = await response.json();
+    document.getElementById("output").innerText +=
+        "You: " + msg + "\n";
 
-    document.getElementById("output").innerText =
-        data.choices[0].message.content;
-};
+    const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            chat_id: currentChat,
+            message: msg
+        })
+    });
+
+    const data = await res.json();
+
+    document.getElementById("output").innerText +=
+        "AI: " + data.response + "\n\n";
+}
+
+async function newChat() {
+    const res = await fetch("/new_chat", {
+        method: "POST"
+    });
+
+    const data = await res.json();
+    currentChat = data.chat_id;
+
+    document.getElementById("output").innerText +=
+        "\n--- " + currentChat + " ---\n\n";
+}

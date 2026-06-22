@@ -2,6 +2,6 @@ mod tui;
 mod web;
 
 fn main() {
-    tui::run();
-    //web::run();
+    //tui::run();
+    web::run();
 }
