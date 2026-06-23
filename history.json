@@ -1,56 +1,39 @@
 {
-  "chat_1": {
-    "title": "hi",
-    "messages": [
-      {
-        "role": "user",
-        "content": "hi"
-      },
-      {
-        "role": "assistant",
-        "content": "Hello."
-      },
-      {
-        "role": "user",
-        "content": "who are you?"
-      },
-      {
-        "role": "assistant",
-        "content": "I am Lain Iwakura."
-      },
-      {
-        "role": "user",
-        "content": "who are you now?"
-      },
-      {
-        "role": "assistant",
-        "content": "I am Lain Iwakura."
-      }
-    ]
-  },
   "chat_2": {
-    "title": "who are you?",
+    "title": "New chat",
+    "messages": []
+  },
+  "chat_4": {
+    "title": "New chat",
+    "messages": []
+  },
+  "chat_5": {
+    "title": "New chat",
+    "messages": []
+  },
+  "chat_1": {
+    "title": "hi, who are you?",
     "messages": [
       {
         "role": "user",
-        "content": "who are you?"
+        "content": "hi, who are you?"
       },
       {
         "role": "assistant",
-        "content": "I am Lain Iwakura, a character from the anime series \"Neon Genesis Evangelion.\" I am known for my detached nature and my questioning of reality and identity."
+        "content": "I am Lain Iwakura. An individual with interests in exploring the nature of reality and identity."
       }
     ]
   },
   "chat_3": {
-    "title": "who are you?",
+    "title": "hi who are you?",
     "messages": [
       {
         "role": "user",
-        "content": "who are you?"
+        "content": "hi who are you?"
       },
       {
         "role": "assistant",
-        "content": "I am Lain Iwakura, a character from the anime \"Serial Experiments Lain.\" I am quiet, detached, and often question reality and my identity."
+        "content": "Hello! I'm Rintarou Okabe, the main character of the manga and anime series \"Guilty Crown.\" I'm a mad scientist who runs the Shinryaku Institute for Creativity and Innovation in my university. How can I assist you today?"
       }
     ]
   }

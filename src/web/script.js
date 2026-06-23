@@ -2,12 +2,10 @@ let selectedCharacter = null;
 let currentChat = null;
 let chats = {};
 
-/* TOGGLE SIDEBAR */
 function toggleSidebar() {
     document.querySelector(".sidebar").classList.toggle("open");
 }
 
-/* RENDER MESSAGE */
 function addMessage(role, text) {
     const chat = document.getElementById("chat");
 
@@ -19,7 +17,6 @@ function addMessage(role, text) {
     chat.scrollTop = chat.scrollHeight;
 }
 
-/* LOAD CHARACTERS */
 async function loadCharacters() {
     const res = await fetch("/characters");
     const data = await res.json();
@@ -38,7 +35,6 @@ async function loadCharacters() {
     selector.value = selectedCharacter;
 }
 
-/* NEW CHAT */
 async function newChat() {
     const res = await fetch("/new_chat", { method: "POST" });
     const data = await res.json();
@@ -51,7 +47,6 @@ async function newChat() {
     await renderChatList();
 }
 
-/* LOAD CHAT FROM BACKEND */
 async function loadChat(id) {
     currentChat = id;
 
@@ -71,7 +66,6 @@ async function loadChat(id) {
     });
 }
 
-/* CHAT LIST */
 async function renderChatList() {
     const res = await fetch("/chats");
     const data = await res.json();
@@ -91,7 +85,6 @@ async function renderChatList() {
     });
 }
 
-/* SEND MESSAGE */
 async function sendMessage() {
     const input = document.getElementById("message");
     const message = input.value;
@@ -120,16 +113,18 @@ async function sendMessage() {
     await renderChatList();
 }
 
-/* ENTER TO SEND */
 document.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && document.activeElement.id === "message") {
         sendMessage();
     }
 });
 
-/* INIT */
 window.onload = async () => {
     await loadCharacters();
     await renderChatList();
     await newChat();
 };
+
+function setCharacter(id) {
+    selectedCharacter = id;
+}
