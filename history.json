@@ -1,32 +1,12 @@
 {
-  "chat_2": [
+  "chats": [
     {
-      "role": "user",
-      "content": "hi"
+      "name": "Chat 1",
+      "messages": []
     },
     {
-      "role": "assistant",
-      "content": "Hello! How can I assist you today?"
-    }
-  ],
-  "chat_3": [
-    {
-      "role": "user",
-      "content": "hey"
-    },
-    {
-      "role": "assistant",
-      "content": "Hello! How can I assist you today?"
-    }
-  ],
-  "chat_1": [
-    {
-      "role": "user",
-      "content": "hey"
-    },
-    {
-      "role": "assistant",
-      "content": "Hello! How can I assist you today?"
+      "name": "Chat 2",
+      "messages": []
     }
   ]
 }
