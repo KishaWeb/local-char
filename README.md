@@ -10,7 +10,8 @@ local char is a cli and a web program that runs ai locally that can act like the
 - made for weaker models (for now)
 - chat history
 - great tui
-- really basic web server
+- really basic web server (with character selecting)
+- lan sharing
 
 ## setup
 
@@ -40,12 +41,12 @@ local-char
 ## usage
 ```bash
 local-char tui (runs tui)
-local-char web (starts the web server)
+local-char web [--lan] (starts the web server, if you use --lan it enables lan sharing)
 ```
 
 if your running it in cargo use it like this:
 
 ```bash
 cargo run -- tui (runs tui)
-cargo run -- web (starts web server)
+cargo run -- web (starts web server, if you use --lan it enables lan sharing)
 ```
