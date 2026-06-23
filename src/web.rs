@@ -1,5 +1,5 @@
 use axum::{
-    extract::State,
+    extract::{State, Path},
     response::{Html, IntoResponse},
     routing::{get, post},
     Json, Router,
@@ -12,7 +12,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-type History = HashMap<String, Vec<Message>>;
+type History = HashMap<String, Chat>;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -23,6 +23,12 @@ pub struct AppState {
 pub struct Message {
     pub role: String,
     pub content: String,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Chat {
+    pub title: String,
+    pub messages: Vec<Message>,
 }
 
 #[derive(Deserialize)]
@@ -67,9 +73,12 @@ pub async fn run(lan: bool) {
     let app = Router::new()
         .route("/", get(index))
         .route("/script.js", get(script))
+        .route("/style.css", get(style))
         .route("/chat", post(chat))
         .route("/new_chat", post(new_chat))
         .route("/characters", get(characters))
+        .route("/chats", get(list_chats))
+        .route("/chat_history/:id", get(get_chat))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(addr)
@@ -95,6 +104,13 @@ async fn script() -> impl IntoResponse {
     ([("Content-Type", "application/javascript")], js)
 }
 
+async fn style() -> impl IntoResponse {
+    let css = fs::read_to_string("src/web/style.css")
+        .unwrap_or_else(|_| "body { background: red; }".to_string());
+
+    ([("Content-Type", "text/css")], css)
+}
+
 async fn characters() -> impl IntoResponse {
     let chars = load_characters();
 
@@ -110,6 +126,36 @@ async fn characters() -> impl IntoResponse {
         .collect();
 
     Json(list)
+}
+
+async fn list_chats(State(state): State<AppState>) -> impl IntoResponse {
+    let history = state.history.lock().unwrap();
+
+    let chats: Vec<_> = history
+        .iter()
+        .map(|(id, chat)| {
+            json!({
+                "id": id,
+                "title": chat.title
+            })
+        })
+        .collect();
+
+    Json(chats)
+}
+
+async fn get_chat(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    let history = state.history.lock().unwrap();
+
+    Json(
+        history
+            .get(&id)
+            .map(|c| c.messages.clone())
+            .unwrap_or_default()
+    )
 }
 
 async fn chat(
@@ -134,18 +180,28 @@ async fn chat(
     {
         let mut history = state.history.lock().unwrap();
 
-        history
-            .entry(req.chat_id.clone())
-            .or_default()
-            .push(Message {
-                role: "user".to_string(),
-                content: req.message.clone(),
-            });
+        let chat = history.entry(req.chat_id.clone()).or_insert(Chat {
+            title: "New chat".to_string(),
+            messages: vec![],
+        });
+
+        // set title from first user message
+        if chat.title == "New chat" {
+            chat.title = req.message.clone();
+        }
+
+        chat.messages.push(Message {
+            role: "user".to_string(),
+            content: req.message.clone(),
+        });
     }
 
     let mut messages = {
         let history = state.history.lock().unwrap();
-        history.get(&req.chat_id).cloned().unwrap_or_default()
+        history
+            .get(&req.chat_id)
+            .map(|c| c.messages.clone())
+            .unwrap_or_default()
     };
 
     messages.insert(
@@ -187,13 +243,12 @@ async fn chat(
     {
         let mut history = state.history.lock().unwrap();
 
-        history
-            .entry(req.chat_id.clone())
-            .or_default()
-            .push(Message {
+        if let Some(chat) = history.get_mut(&req.chat_id) {
+            chat.messages.push(Message {
                 role: "assistant".to_string(),
                 content: ai.clone(),
             });
+        }
 
         save_history(&history);
     }
@@ -204,12 +259,16 @@ async fn chat(
     }))
 }
 
+
 async fn new_chat(State(state): State<AppState>) -> impl IntoResponse {
     let mut history = state.history.lock().unwrap();
 
     let id = format!("chat_{}", history.len() + 1);
 
-    history.insert(id.clone(), vec![]);
+    history.insert(id.clone(), Chat {
+        title: "New chat".to_string(),
+        messages: vec![],
+    });
 
     save_history(&history);
 

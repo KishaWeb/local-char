@@ -2,20 +2,40 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Local Char</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
+
 <body>
 
-<h2>Local Char</h2>
+<div class="app">
 
-<input id="message" placeholder="type..." />
-<button onclick="sendMessage()">Send</button>
-<button onclick="newChat()">New Chat</button>
-<select id="characterSelect" onchange="selectedCharacter = this.value"></select>
+    <div class="sidebar">
+        <div class="sidebar-header">Local Char</div>
 
-<pre id="output"></pre>
+        <button class="new-chat" onclick="newChat()">+ New Chat</button>
+
+        <div id="chatList" class="chat-list"></div>
+
+        <select id="characterSelect"></select>
+    </div>
+
+    <div class="main">
+
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+
+        <div id="chat" class="chat"></div>
+
+        <div class="input-area">
+            <input id="message" placeholder="Type a message..." />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+
+    </div>
+
+</div>
 
 <script src="/script.js"></script>
-
 </body>
 </html>
