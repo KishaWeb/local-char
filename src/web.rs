@@ -49,7 +49,7 @@ pub async fn run() {
         .await
         .unwrap();
 
-    println!("Server running: http://127.0.0.1:7878");
+    println!("http://127.0.0.1:7878");
 
     axum::serve(listener, app).await.unwrap();
 }
@@ -68,6 +68,13 @@ async fn script() -> impl IntoResponse {
     ([("Content-Type", "application/javascript")], js)
 }
 
+fn system_prompt() -> Message {
+    Message {
+        role: "system".to_string(),
+        content: "You are a helpful assistant. You remember the conversation history.".to_string(),
+    }
+}
+
 async fn new_chat(State(state): State<AppState>) -> impl IntoResponse {
     let mut history = state.history.lock().unwrap();
 
@@ -76,8 +83,6 @@ async fn new_chat(State(state): State<AppState>) -> impl IntoResponse {
     history.insert(id.clone(), vec![]);
 
     save_history(&history);
-
-    println!("NEW CHAT CREATED: {}", id);
 
     Json(json!({ "chat_id": id }))
 }
@@ -88,6 +93,9 @@ async fn chat(
 ) -> impl IntoResponse {
     println!("CHAT HIT");
 
+    // -------------------------
+    // 1. store user message
+    // -------------------------
     {
         let mut history = state.history.lock().unwrap();
 
@@ -99,7 +107,10 @@ async fn chat(
         });
     }
 
-    let snapshot = {
+    // -------------------------
+    // 2. build memory context
+    // -------------------------
+    let mut messages = {
         let history = state.history.lock().unwrap();
 
         history
@@ -108,13 +119,26 @@ async fn chat(
             .unwrap_or_default()
     };
 
+    // add system prompt at the start
+    messages.insert(0, system_prompt());
+
+    // limit memory window
+    let max_len = 20;
+    if messages.len() > max_len {
+        let start = messages.len() - max_len;
+        messages = messages[start..].to_vec();
+    }
+
+    // -------------------------
+    // 3. call llama.cpp
+    // -------------------------
     let client = reqwest::Client::new();
 
     let res = client
         .post("http://127.0.0.1:8080/v1/chat/completions")
         .json(&json!({
             "model": "local-model",
-            "messages": snapshot
+            "messages": messages
         }))
         .send()
         .await;
@@ -131,6 +155,9 @@ async fn chat(
         Err(_) => "llama.cpp error".to_string(),
     };
 
+    // -------------------------
+    // 4. store assistant reply
+    // -------------------------
     {
         let mut history = state.history.lock().unwrap();
 
@@ -157,18 +184,8 @@ fn load_history() -> History {
 fn save_history(history: &History) {
     let data = serde_json::to_string_pretty(history).unwrap();
 
-    match std::fs::write(HISTORY_PATH, &data) {
-        Ok(_) => {
-            println!("SAVE OK -> {}", HISTORY_PATH);
-        }
-        Err(e) => {
-            println!("SAVE FAILED: {:?}", e);
-        }
-    }
-
-    // extra verification read-back
-    match std::fs::read_to_string(HISTORY_PATH) {
-        Ok(v) => println!("READBACK OK, size = {}", v.len()),
-        Err(e) => println!("READBACK FAILED: {:?}", e),
+    match fs::write(HISTORY_PATH, data) {
+        Ok(_) => println!("SAVE OK -> {}", HISTORY_PATH),
+        Err(e) => println!("SAVE FAILED: {:?}", e),
     }
 }
