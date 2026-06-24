@@ -45,6 +45,7 @@ struct Message {
 struct ChatSession {
     name: String,
     messages: Vec<Message>,
+    pinned: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -151,11 +152,12 @@ fn now() -> u64 {
 }
 
 fn load_sessions() -> SessionFile {
-    match fs::read_to_string("history.json") {
+    match fs::read_to_string("history_tui.json") {
         Ok(data) => serde_json::from_str(&data).unwrap_or(SessionFile {
             chats: vec![ChatSession {
                 name: "Chat 1".to_string(),
                 messages: vec![],
+                pinned:false,
             }],
         }),
         Err(_) => {
@@ -163,10 +165,11 @@ fn load_sessions() -> SessionFile {
                 chats: vec![ChatSession {
                     name: "Chat 1".to_string(),
                     messages: vec![],
+                    pinned: false,
                 }],
             };
 
-            let _ = fs::write("history.json", serde_json::to_string_pretty(&init).unwrap());
+            let _ = fs::write("history_tui.json", serde_json::to_string_pretty(&init).unwrap());
             init
         }
     }
@@ -174,7 +177,7 @@ fn load_sessions() -> SessionFile {
 
 fn save_sessions(sessions: &SessionFile) {
     let data = serde_json::to_string_pretty(sessions).unwrap();
-    fs::write("history.json", data).unwrap();
+    fs::write("history_tui.json", data).unwrap();
 }
 
 fn load_characters() -> CharacterFile {
@@ -217,6 +220,7 @@ pub fn run() {
         sessions.chats.push(ChatSession {
             name: new_name,
             messages: vec![],
+            pinned: false,
         });
 
         current_chat = sessions.chats.len() - 1;
@@ -317,6 +321,7 @@ pub fn run() {
                 sessions.chats.push(ChatSession {
                     name: new_name.clone(),
                     messages: vec![],
+                    pinned:false,
                 });
 
                 current_chat = sessions.chats.len() - 1;
@@ -331,9 +336,13 @@ pub fn run() {
             "/chats" => {
                 for (i, chat) in sessions.chats.iter().enumerate() {
                     if i == current_chat {
-                        println!("* {} ({})", i + 1, chat.name);
+                        let pin = if chat.pinned { "[p]" } else { "" };
+
+                        println!("* {} {} ({})", pin, i + 1, chat.name);
                     } else {
-                        println!("  {} ({})", i + 1, chat.name);
+                        let pin = if chat.pinned { "[p]" } else { "" };
+
+                        println!("  {} {} ({})", pin, i + 1, chat.name);
                     }
                 }
 
@@ -355,6 +364,7 @@ pub fn run() {
                     sessions.chats.push(ChatSession {
                         name: new_name.clone(),
                         messages: vec![],
+                        pinned:false,
                     });
 
                     current_chat = sessions.chats.len() - 1;
@@ -371,6 +381,38 @@ pub fn run() {
                     );
                 }
 
+                continue;
+            }
+
+            "/delete" => {
+                if sessions.chats.len() <= 1 {
+                    println!("cannot delete last chat");
+                    continue;
+                }
+
+                let removed = sessions.chats.remove(current_chat);
+
+                println!("deleted {}", removed.name);
+
+                if current_chat >= sessions.chats.len() {
+                    current_chat = sessions.chats.len() - 1;
+                }
+
+                save_sessions(&sessions);
+                continue;
+            }
+            "/pin" => {
+                let chat = &mut sessions.chats[current_chat];
+
+                chat.pinned = !chat.pinned;
+
+                if chat.pinned {
+                    println!("pinned {}", chat.name);
+                } else {
+                    println!("unpinned {}", chat.name);
+                }
+
+                save_sessions(&sessions);
                 continue;
             }
 

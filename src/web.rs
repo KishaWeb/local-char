@@ -54,8 +54,8 @@ pub struct Character {
     pub switch_hint: String,
 }
 
-const HISTORY_PATH: &str = "/home/arshia/local-char/history.json";
-const CHARACTER_PATH: &str = "/home/arshia/local-char/src/characters/character.json";
+const HISTORY_PATH: &str = "history_web.json";
+const CHARACTER_PATH: &str = "characters/character.json";
 
 pub async fn run(lan: bool) {
     let addr = if lan {
