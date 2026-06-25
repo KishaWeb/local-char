@@ -34,6 +34,15 @@
 
         <div id="normalChats" class="chat-list"></div>
 
+        <div class="section-title">
+            Character
+        </div>
+
+        <select
+            id="characterSelect"
+            onchange="setCharacter(this.value)">
+        </select>
+
     </aside>
 
     <main class="main">
@@ -41,21 +50,8 @@
         <div id="chat" class="chat"></div>
 
         <div class="input-area">
-
-            <select
-                id="characterSelect"
-                onchange="setCharacter(this.value)">
-            </select>
-
-            <input
-                id="message"
-                placeholder="Type a message..."
-            >
-
-            <button onclick="sendMessage()">
-                Send
-            </button>
-
+            <input id="message" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
         </div>
 
     </main>

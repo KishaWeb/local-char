@@ -271,6 +271,8 @@ pub fn run() {
                 println!("/chats (placeholder)");
                 println!("/newchat");
                 println!("/switch <chat id> (or no chat id to go to the tui");
+                println!("/pin");
+                println!("/delete");
                 continue;
             }
 

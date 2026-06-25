@@ -2,7 +2,16 @@ let selectedCharacter = null;
 let currentChat = null;
 
 function toggleSidebar() {
-    document.querySelector(".sidebar").classList.toggle("open");
+    const sidebar = document.querySelector(".sidebar");
+    const btn = document.getElementById("menuBtn");
+
+    sidebar.classList.toggle("open");
+
+    if (sidebar.classList.contains("open")) {
+        btn.innerText = "✕";
+    } else {
+        btn.innerText = "☰";
+    }
 }
 
 function addMessage(role, text) {
@@ -48,9 +57,10 @@ async function newChat() {
     document.getElementById("chat").innerHTML = "";
 
     await renderChatList();
-
+    
     if (window.innerWidth <= 768) {
         document.querySelector(".sidebar").classList.remove("open");
+        document.getElementById("menuBtn").innerText = "☰";
     }
 }
 
