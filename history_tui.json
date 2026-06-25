@@ -1,0 +1,14 @@
+{
+  "chats": [
+    {
+      "name": "Chat 1",
+      "messages": [],
+      "pinned": false
+    },
+    {
+      "name": "Chat 2",
+      "messages": [],
+      "pinned": false
+    }
+  ]
+}

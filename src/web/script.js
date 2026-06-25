@@ -1,6 +1,5 @@
 let selectedCharacter = null;
 let currentChat = null;
-let chats = {};
 
 function toggleSidebar() {
     document.querySelector(".sidebar").classList.toggle("open");
@@ -31,20 +30,28 @@ async function loadCharacters() {
         selector.appendChild(opt);
     });
 
-    selectedCharacter = data[0]?.id;
-    selector.value = selectedCharacter;
+    if (data.length > 0) {
+        selectedCharacter = data[0].id;
+        selector.value = selectedCharacter;
+    }
 }
 
 async function newChat() {
-    const res = await fetch("/new_chat", { method: "POST" });
+    const res = await fetch("/new_chat", {
+        method: "POST"
+    });
+
     const data = await res.json();
 
     currentChat = data.chat_id;
-    chats[currentChat] = [];
 
     document.getElementById("chat").innerHTML = "";
 
     await renderChatList();
+
+    if (window.innerWidth <= 768) {
+        document.querySelector(".sidebar").classList.remove("open");
+    }
 }
 
 async function loadChat(id) {
@@ -52,8 +59,6 @@ async function loadChat(id) {
 
     const res = await fetch(`/chat_history/${id}`);
     const data = await res.json();
-
-    chats[id] = data;
 
     const chat = document.getElementById("chat");
     chat.innerHTML = "";
@@ -64,57 +69,163 @@ async function loadChat(id) {
             m.content
         );
     });
+
+    if (window.innerWidth <= 768) {
+        document.querySelector(".sidebar").classList.remove("open");
+    }
+}
+
+async function pinChat(id) {
+    await fetch(`/pin/${id}`, {
+        method: "POST"
+    });
+
+    await renderChatList();
+}
+
+async function deleteChat(id) {
+    await fetch(`/delete/${id}`, {
+        method: "POST"
+    });
+
+    if (currentChat === id) {
+        currentChat = null;
+        document.getElementById("chat").innerHTML = "";
+    }
+
+    await renderChatList();
 }
 
 async function renderChatList() {
     const res = await fetch("/chats");
     const data = await res.json();
 
-    const list = document.getElementById("chatList");
-    list.innerHTML = "";
+    const pinned = document.getElementById("pinnedChats");
+    const normal = document.getElementById("normalChats");
+
+    pinned.innerHTML = "";
+    normal.innerHTML = "";
 
     data.forEach(chat => {
-        const div = document.createElement("div");
-        div.className = "chat-item";
+        const item = document.createElement("div");
+        item.className = "chat-item";
 
-        div.innerText = chat.title;
+        const top = document.createElement("div");
+        top.className = "chat-top";
 
-        div.onclick = () => loadChat(chat.id);
+        const title = document.createElement("span");
+        title.className = "chat-title";
+        title.innerText = chat.title || "New chat";
+        title.onclick = () => loadChat(chat.id);
 
-        list.appendChild(div);
+        const actions = document.createElement("div");
+        actions.className = "chat-actions";
+
+        const pin = document.createElement("button");
+        pin.innerText = chat.pinned ? "Unpin" : "Pin";
+
+        pin.onclick = async (e) => {
+            e.stopPropagation();
+            await pinChat(chat.id);
+        };
+
+        const del = document.createElement("button");
+        del.innerText = "Delete";
+
+        del.onclick = async (e) => {
+            e.stopPropagation();
+
+            if (confirm("Delete this chat?")) {
+                await deleteChat(chat.id);
+            }
+        };
+
+        actions.appendChild(pin);
+        actions.appendChild(del);
+
+        top.appendChild(title);
+        top.appendChild(actions);
+
+        item.appendChild(top);
+
+        if (chat.pinned) {
+            pinned.appendChild(item);
+        } else {
+            normal.appendChild(item);
+        }
     });
 }
 
 async function sendMessage() {
     const input = document.getElementById("message");
-    const message = input.value;
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    if (!selectedCharacter) {
+        alert("No character selected");
+        return;
+    }
+
+    if (!currentChat) {
+        await newChat();
+    }
+
     input.value = "";
-
-    if (!message.trim()) return;
-
-    if (!currentChat) await newChat();
 
     addMessage("user", message);
 
-    const res = await fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            chat_id: currentChat,
-            message,
-            character_id: selectedCharacter
-        })
-    });
+    const chat = document.getElementById("chat");
 
-    const data = await res.json();
+    const thinking = document.createElement("div");
+    thinking.className = "msg ai";
+    thinking.innerText = "Thinking...";
 
-    addMessage("ai", data.response);
+    chat.appendChild(thinking);
+    chat.scrollTop = chat.scrollHeight;
 
-    await renderChatList();
+    try {
+        const res = await fetch("/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                chat_id: currentChat,
+                message: message,
+                character_id: selectedCharacter
+            })
+        });
+
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        thinking.remove();
+
+        addMessage("ai", data.response);
+
+        await renderChatList();
+    } catch (err) {
+        console.error(err);
+
+        thinking.remove();
+
+        addMessage("ai", "Request failed.");
+    }
+}
+
+function setCharacter(id) {
+    selectedCharacter = id;
 }
 
 document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && document.activeElement.id === "message") {
+    if (
+        e.key === "Enter" &&
+        document.activeElement.id === "message"
+    ) {
         sendMessage();
     }
 });
@@ -124,7 +235,3 @@ window.onload = async () => {
     await renderChatList();
     await newChat();
 };
-
-function setCharacter(id) {
-    selectedCharacter = id;
-}

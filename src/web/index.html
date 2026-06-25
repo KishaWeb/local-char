@@ -6,36 +6,63 @@
     <title>Local Char</title>
     <link rel="stylesheet" href="/style.css">
 </head>
-
 <body>
+
+<button id="menuBtn" onclick="toggleSidebar()">☰</button>
 
 <div class="app">
 
-    <div class="sidebar">
-        <div class="sidebar-header">Local Char</div>
+    <aside class="sidebar">
 
-        <button class="new-chat" onclick="newChat()">+ New Chat</button>
+        <div class="sidebar-header">
+            Local Char
+        </div>
 
-        <div id="chatList" class="chat-list"></div>
+        <button class="new-chat" onclick="newChat()">
+            + New Chat
+        </button>
 
-        <select id="characterSelect" onchange="setCharacter(this.value)"></select>
-    </div>
+        <div class="section-title">
+            Pinned
+        </div>
 
-    <div class="main">
+        <div id="pinnedChats" class="chat-list"></div>
 
-        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        <div class="section-title">
+            Chats
+        </div>
+
+        <div id="normalChats" class="chat-list"></div>
+
+    </aside>
+
+    <main class="main">
 
         <div id="chat" class="chat"></div>
 
         <div class="input-area">
-            <input id="message" placeholder="Type a message..." />
-            <button onclick="sendMessage()">Send</button>
+
+            <select
+                id="characterSelect"
+                onchange="setCharacter(this.value)">
+            </select>
+
+            <input
+                id="message"
+                placeholder="Type a message..."
+            >
+
+            <button onclick="sendMessage()">
+                Send
+            </button>
+
         </div>
 
-    </div>
+    </main>
 
 </div>
 
 <script src="/script.js"></script>
+
 </body>
 </html>

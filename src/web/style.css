@@ -5,10 +5,11 @@
 }
 
 body {
-    font-family: sans-serif;
+    font-family: Inter, sans-serif;
     background: #0f1117;
     color: white;
     height: 100vh;
+    overflow: hidden;
 }
 
 .app {
@@ -17,76 +18,130 @@ body {
 }
 
 .sidebar {
-    width: 260px;
+    width: 280px;
     background: #161b22;
+    border-right: 1px solid #2d333b;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #2d333b;
+    flex-shrink: 0;
 }
 
 .sidebar-header {
-    padding: 16px;
+    padding: 18px;
+    font-size: 20px;
     font-weight: bold;
-    color: #ffffff;
+    border-bottom: 1px solid #2d333b;
 }
 
 .new-chat {
-    margin: 10px;
-    padding: 10px;
+    margin: 12px;
+    padding: 12px;
     border: none;
+    border-radius: 10px;
     background: #238636;
     color: white;
-    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.new-chat:hover {
+    background: #2ea043;
+}
+
+.section-title {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #8b949e;
+    text-transform: uppercase;
 }
 
 .chat-list {
-    flex: 1;
     overflow-y: auto;
 }
 
 .chat-item {
+    margin: 4px 8px;
     padding: 10px;
+    border-radius: 10px;
     cursor: pointer;
-    border-bottom: 1px solid #222;
+    transition: 0.15s;
+    background: transparent;
 }
 
 .chat-item:hover {
     background: #21262d;
 }
 
+.chat-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.chat-title {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.chat-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.chat-actions button {
+    border: none;
+    background: #30363d;
+    color: white;
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.chat-actions button:hover {
+    background: #484f58;
+}
+
 .main {
     flex: 1;
     display: flex;
     flex-direction: column;
-    height: 100vh;
     position: relative;
 }
 
 .chat {
     flex: 1;
-    padding: 16px;
     overflow-y: auto;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding-bottom: 80px;
+    gap: 12px;
+    scroll-behavior: smooth;
+    padding-bottom: 100px;
 }
 
 .msg {
-    padding: 10px;
-    border-radius: 10px;
-    max-width: 70%;
+    max-width: 75%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    line-height: 1.5;
     word-wrap: break-word;
 }
 
 .user {
     align-self: flex-end;
-    background: #238636;
+    background: linear-gradient(
+        135deg,
+        #238636,
+        #2ea043
+    );
 }
 
 .ai {
     align-self: flex-start;
-    background: #1f2937;
+    background: #1b2330;
+    border: 1px solid #2d333b;
 }
 
 .input-area {
@@ -98,49 +153,83 @@ body {
     display: flex;
     gap: 10px;
 
-    padding: 10px;
-    border-top: 1px solid #2d333b;
+    padding: 12px;
     background: #0f1117;
+    border-top: 1px solid #2d333b;
 }
 
 input {
     flex: 1;
+}
+
+input,
+select {
     padding: 10px;
     border-radius: 8px;
-    border: 1px solid #333;
+    border: 1px solid #30363d;
     background: #0d1117;
     color: white;
 }
 
-.menu-btn {
+.input-area button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: #238636;
+    color: white;
+    cursor: pointer;
+}
+
+.input-area button:hover {
+    background: #2ea043;
+}
+
+#menuBtn {
     display: none;
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 1000;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1001;
 
     background: #238636;
     border: none;
-    padding: 10px;
-    border-radius: 8px;
     color: white;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
 }
 
 @media (max-width: 768px) {
 
-    .menu-btn {
+    #menuBtn {
         display: block;
     }
 
     .sidebar {
         position: fixed;
+        left: 0;
+        top: 0;
         height: 100%;
+        z-index: 1000;
+
         transform: translateX(-100%);
-        transition: 0.2s;
-        z-index: 999;
+        transition: transform 0.2s ease;
     }
 
     .sidebar.open {
         transform: translateX(0);
     }
+
+    .msg {
+        max-width: 90%;
+    }
+
+    .input-area {
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+}
+
+#characterSelect {
+    min-width: 180px;
+    font-size: 15px;
 }

@@ -29,6 +29,9 @@ pub struct Message {
 pub struct Chat {
     pub title: String,
     pub messages: Vec<Message>,
+
+    #[serde(default)]
+    pub pinned: bool,
 }
 
 #[derive(Deserialize)]
@@ -55,7 +58,7 @@ pub struct Character {
 }
 
 const HISTORY_PATH: &str = "history_web.json";
-const CHARACTER_PATH: &str = "characters/character.json";
+const CHARACTER_PATH: &str = "src/characters/character.json";
 
 pub async fn run(lan: bool) {
     let addr = if lan {
@@ -79,6 +82,8 @@ pub async fn run(lan: bool) {
         .route("/characters", get(characters))
         .route("/chats", get(list_chats))
         .route("/chat_history/:id", get(get_chat))
+        .route("/pin/:id", post(pin_chat))
+        .route("/delete/:id", post(delete_chat))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(addr)
@@ -136,7 +141,8 @@ async fn list_chats(State(state): State<AppState>) -> impl IntoResponse {
         .map(|(id, chat)| {
             json!({
                 "id": id,
-                "title": chat.title
+                "title": chat.title,
+                "pinned": chat.pinned
             })
         })
         .collect();
@@ -156,6 +162,38 @@ async fn get_chat(
             .map(|c| c.messages.clone())
             .unwrap_or_default()
     )
+}
+
+async fn pin_chat(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    let mut history = state.history.lock().unwrap();
+
+    if let Some(chat) = history.get_mut(&id) {
+        chat.pinned = !chat.pinned;
+    }
+
+    save_history(&history);
+
+    Json(json!({
+        "ok": true
+    }))
+}
+
+async fn delete_chat(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    let mut history = state.history.lock().unwrap();
+
+    history.remove(&id);
+
+    save_history(&history);
+
+    Json(json!({
+        "ok": true
+    }))
 }
 
 async fn chat(
@@ -183,9 +221,9 @@ async fn chat(
         let chat = history.entry(req.chat_id.clone()).or_insert(Chat {
             title: "New chat".to_string(),
             messages: vec![],
+            pinned: false,
         });
 
-        // set title from first user message
         if chat.title == "New chat" {
             chat.title = req.message.clone();
         }
@@ -268,6 +306,7 @@ async fn new_chat(State(state): State<AppState>) -> impl IntoResponse {
     history.insert(id.clone(), Chat {
         title: "New chat".to_string(),
         messages: vec![],
+        pinned: false,
     });
 
     save_history(&history);
