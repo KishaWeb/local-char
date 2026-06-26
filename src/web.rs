@@ -84,6 +84,7 @@ pub async fn run(lan: bool) {
         .route("/chat_history/:id", get(get_chat))
         .route("/pin/:id", post(pin_chat))
         .route("/delete/:id", post(delete_chat))
+        .route("/logo.png", get(logo))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(addr)
@@ -114,6 +115,23 @@ async fn style() -> impl IntoResponse {
         .unwrap_or_else(|_| "body { background: red; }".to_string());
 
     ([("Content-Type", "text/css")], css)
+}
+
+async fn logo() -> impl IntoResponse {
+    match fs::read("src/assets/logo.png") {
+        Ok(img) => (
+            axum::http::StatusCode::OK,
+            [("Content-Type", "image/png")],
+            img,
+        )
+            .into_response(),
+
+        Err(e) => (
+            axum::http::StatusCode::NOT_FOUND,
+            format!("{e}"),
+        )
+            .into_response(),
+    }
 }
 
 async fn characters() -> impl IntoResponse {

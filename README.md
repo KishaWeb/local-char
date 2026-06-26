@@ -1,4 +1,7 @@
 # local char
+<p align="center">
+  <img src="src/assets/logo-main.png" width="500">
+</p>
 
 local char is a cli and a web program that runs ai locally that can act like the character you want, the characters are mostly mad for 3-5 b models not very strong im going to add different category for the range strength of each model so it can act better like your desired character, and you dont need any cloud service, no accounts and no subscriptions.
 
@@ -15,6 +18,18 @@ local char is a cli and a web program that runs ai locally that can act like the
 - pinning and deleting chats 
 - Lightweight and fast
 - works well on smaller models
+
+## showcase
+
+### webserver
+<p align="center">
+  <img src="src/assets/demo-web.gif" width="500">
+</p>
+
+### TUI
+<p align="center">
+  <img src="src/assets/demo.gif" width="500">
+</p>
 
 ## requirements
 - Rust
